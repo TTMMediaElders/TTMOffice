@@ -2,9 +2,10 @@ import PySimpleGUI as sg
 # from BlackBoxReporter import report
 import report
 import os
+import json
 # MAIN
 menu_def = [
-    ['Settings', ['Properties', 'Indicator Standards', '---', 'Clear Reports']],
+    ['Settings', ['Properties', 'Indicator Standards', 'Indicators', '---', 'Clear Reports']],
     ['Help', 'About...']
 ]
 report_time = report.Abathur.report_timing.strftime('%m/%d/%Y')
@@ -29,6 +30,8 @@ del_win = False  # control var for Clear Reports window
 send_reports = False  # controls whether reports are emailed out or not
 # Designated report types, these cannot be changed
 valid_report_types = ['Area', 'District', 'Zone', 'Stake']
+
+
 while True:
     event, values = window.Read()
     # print(f"event: {event}, values: {values}")
@@ -36,8 +39,18 @@ while True:
     reports_to_make = [key for key, val in values.items() if val ==
                        True and key in valid_report_types]
     if event == 'Change Date':
+        # Settings data loaded
+        with open('settings.json') as json_file:
+            settingsData = json.load(json_file)
+
         report.Abathur.report_timing = report.turn_to_datetime(values['Date'])
         report.Zeratul.report_timing = report.turn_to_datetime(values['Date'])
+        settingsData[1]['Date'] = values['Date']
+
+        #Dump to file
+        with open('settings.json', 'w') as outfile:
+            json.dump(settingsData, outfile)
+
     if event == 'Make Reports':
         reports_maker = report.Abathur('.\\data\\key_indicator_reports', reports_to_make)
         hermes = report.Zeratul()
@@ -114,6 +127,13 @@ while True:
             [sg.Button('Save Changes')]
         ]
         win3 = sg.Window('Properties', location=(750, 250)).Layout(layout3)
+    if event == 'Indicators':
+        changeIndicatorLayout = [
+
+        ]
+
+        win4 = sg.Window('Change Indicators', location=(750,350)).Layout(changeIndicatorLayout)
+
     if prop_win:
         ev3, vals3 = win3.Read()
         if ev3 is None or ev3 == 'Exit':
@@ -127,7 +147,6 @@ while True:
     # INDICATOR CONTROL
     # if not ind_win and event == 'Indicator Standards':
     if event == 'Indicator Standards':
-        # TODO: HAVE THIS EDIT A CONFIG FILE THAT IS READ INTO THE REPORT MODULE
         ind_win = True
         layout4 = [
             [sg.Frame(layout=[
@@ -150,6 +169,8 @@ while True:
             report.Abathur.indicator_standards['BD'] = vals4['BD']
             report.Abathur.indicator_standards['SM'] = vals4['SM']
             report.Abathur.indicator_standards['NF'] = vals4['NF']
+            with open('settings.json', 'w') as outfile:
+                json.dump({'BD': vals4['BD'], 'SM': vals4['SM'], 'NF': vals4['NF']}, outfile)
             sg.PopupOK('Changes Saved!')
     if event is None or event == 'Exit':
         break
