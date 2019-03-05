@@ -1,5 +1,6 @@
 # IMPORTS
 import csv
+import json
 from emailing.emailing import send_gmail
 import datetime
 from datetime import date, timedelta
@@ -116,7 +117,10 @@ class Abathur():
 	with open('.\\master_area_props.txt') as mish_org:
 		master_area_props = json.load(mish_org)
 	print_color = True
-	report_timing = last_day(datetime.date.today(), 'Sunday')
+	with open('settings.json') as json_file:
+		settingsData = json.load(json_file)
+
+	report_timing = turn_to_datetime(settingsData[1]['Date'])
 	translate_chinese = {
 		'Area': '區域',
 		'Zone': '地帶',
@@ -160,10 +164,12 @@ class Abathur():
 		'LA': '#800000',
 		'black': '262626'
 	}
+
+
 	indicator_standards = {
-		'BD': 6,
-		'SM': 3,
-		'NF': 4
+		'BD': settingsData[0]['BD'],
+		'SM': settingsData[0]['SM'],
+		'NF': settingsData[0]['NF']
 	}
 	source_types = {
 		'Source 1': '1 - Missionary Finding',
@@ -176,8 +182,8 @@ class Abathur():
 	headers_not_in_csv = ['Date of Last Baptism', f'{report_timing.year} Baptismal Count']
 	keys = ['Report Date', 'Area', 'District', 'Zone', 'Ward', 'Stake']
 	xlApp = win32com.client.Dispatch("Excel.Application")
-	# xlApp.Visible = False
-	# xlApp.DisplayAlerts = False
+	xlApp.Visible = False
+	xlApp.DisplayAlerts = False
 	def __init__(self, file_name, make_these):
 		self.data = csv_to_list(file_name)
 		self.baptismal_sources = csv_to_list('.\\data\\baptismal_source_reports')
